@@ -18,7 +18,6 @@
 
 ## Before Class
 
-- Bring your S6 investigation deliverable — we open the session by comparing them.
 - Have your `mistral-vibe-ek-ita` clone and `vibe` working from last session.
 - Bring the system you described in S6.
 - [optional] One sentence: the most annoying non-functional problem in a system you've used recently.
@@ -27,15 +26,25 @@
 
 ## Today's Teachings
 
-### Part 0 — Compare notes (10 min)
-In pairs, swap your S6 deliverables. Each pair picks one claim Vibe got right and one it oversold. Three pairs share with the room. We keep doing this — every session opens with last session's investigation.
+### Part 0 — Recap: Session 6 (5 min)
+Last session's goals:
+
+- Answer "where is the architecture in this system?" with more than "the diagram."
+- See architecture as **decisions, boundaries, and conventions**.
+- Tell architecture apart from implementation choices that only look architectural.
+- Build vocabulary: **component**, **boundary**, **contract**, **convention**.
+- Use a coding agent (Vibe) to investigate an unfamiliar codebase, verifying every claim
+  it makes rather than taking it on faith.
+
+Today builds on that vocabulary with a new lens: not just *what* the system is made of,
+**but how well it does what it does**.
 
 ### Part 1 — What does "good" mean? (15 min)
 Imagine Vibe ships with no bugs. Every feature works exactly as specified. Could it still be a bad product?
 
-We brainstorm together. The answers — *slow, leaks the API key, only works on my laptop, impossible to extend* — are all real. None of them are about whether the code "works". They're about **quality attributes**: properties of the system that aren't "what it does" but "how well it does it".
+The answers — *slow, leaks the API key, only works on my laptop, impossible to extend* — are all real. None of them are about whether the code "works". They're about **quality attributes**: properties of the system that aren't "what it does" but "how well it does it".
 
-The six this course cares about:
+The six we look at this semester:
 
 - **Performance** — how fast?
 - **Scalability** — does it cope as load grows?
