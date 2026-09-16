@@ -37,11 +37,10 @@ In class we'll walk through a tiny example: a textbook 4-layer notes service. Tw
 
 Both run with one command: `docker compose up --build` from inside the folder. Pick whichever language you're more comfortable in.
 
-The runnable code lives in a sibling repo so it has its own lifecycle:
+The runnable code lives right here in this session's folder:
 
 ```bash
-git clone <examples repo url>
-cd ek-ita-swa-examples/08-layered-architecture/example-kotlin   # or example-python
+cd 08._layered_architecture/example-kotlin   # or example-python
 docker compose up --build
 ```
 
@@ -52,21 +51,49 @@ A **layer** is a horizontal slice of the system. The classic web stack has four:
 - **domain** — business rules and the model of the world
 - **persistence** — talks to the database, files, external systems
 
-The rule that *makes* this stack layered: **dependencies point downward only**.
+### The dependency rule
 
-- A layer may call the layer below.
-- A layer **may not** call a layer above.
-- Ideally, a layer doesn't reach sideways either.
+> The rule that *makes* this stack layered: **dependencies point downward only**.
+>
+> - A layer may call the layer below.
+> - A layer **may not** call a layer above.
+> - Ideally, a layer doesn't reach sideways either.
+
+**Dependency, not data.** The arrows mean *imports*, not *data flow* — return values travelling back up are normal. What's forbidden is persistence's code importing from application or presentation.
+
+```mermaid
+flowchart TB
+    PRES[presentation] -->|"may depend on"| APP[application]
+    APP -->|"may depend on"| DOM[domain]
+    DOM -->|"may depend on"| PERSIST[persistence]
+    PERSIST -.->|"✗ import — forbidden"| APP
+```
 
 Two flavours: **strict** (each layer calls only the next layer down) and **relaxed** (a layer can reach any layer below). Most real systems are relaxed.
+
+```mermaid
+flowchart TB
+    subgraph Strict["strict — only the layer directly below"]
+        direction TB
+        P1[presentation] -->|"depends on"| A1[application]
+        A1 -->|"depends on"| D1[domain]
+        D1 -->|"depends on"| PS1[persistence]
+    end
+    subgraph Relaxed["relaxed — any layer below"]
+        direction TB
+        P2[presentation] -->|"depends on"| A2[application]
+        A2 -->|"depends on"| D2[domain]
+        D2 -->|"depends on"| PS2[persistence]
+        P2 -.->|"depends on"| D2
+        A2 -.->|"depends on"| PS2
+    end
+```
 
 Note how this connects to last week's vocabulary:
 - The boxes are **components** (S6).
 - The horizontal lines are **boundaries** (S6).
 - "Arrows point down" is a **convention** the system commits to (S6).
 - "I can swap one layer without touching the others" is a **maintainability** claim (S7).
-
-Layered isn't new physics. It's a named arrangement of things you already know.
 
 ### Part 2 — Is Vibe layered? (35 min)
 Open question, investigated together. Use the file browser and Vibe.
@@ -101,10 +128,8 @@ Layered's pay-offs, in QA terms:
 - **Onboarding cost.** A new developer can read one layer at a time. That's a real cost benefit.
 - The arrows-down rule is a *load-bearing convention*: small enough to fit on a sticker, big enough to shape months of design discipline.
 
-Quick exercise: name **two QAs layered buys you** and **one it costs**. Compare across pairs.
-
 ### Part 4 — How it falls apart (35 min)
-Three classic failure modes. For each, find an example — in Vibe, or in your bring-your-own codebase.
+Three classic failure modes. For each, find an example — in [Vibe](https://github.com/Ek-Ita-Swa-Iti/mistral-vibe-ek-ita), or in your bring-your-own codebase.
 
 - **The shortcut.** A presentation file imports directly from persistence, skipping the layers in between. *In Vibe:* would `cli/` ever import from `core/llm/backend/` directly? Ask Vibe to look.
 - **The God-domain.** Business logic ends up in controllers because the domain layer is empty. *Diagnostic:* a controller file over 400 lines.
@@ -117,7 +142,7 @@ Ask Vibe: *"Find one place in this codebase where a layering violation either ex
 ### Part 5 — Read a real one: bring-your-own (40 min)
 In pairs, using the codebase one of you brought:
 
-- What are the layers, in the team's words (folder names, docs, conventions)?
+- What are the layers in your system?
 - Are the dependency rules respected? Use your agent to find imports that cross layers in the wrong direction.
 - Find one violation. (If you can't find one, find one place a violation would be tempting.)
 - What one concrete suggestion would you make as a new joiner tomorrow?
@@ -177,7 +202,7 @@ Bring it to session 9. First 10 minutes we'll compare.
 ## After Class
 
 - Skim ahead: session 9 covers **hexagonal architecture** (ports and adapters). It's the answer to the failure modes of layered — and to the shape we noticed inside Vibe's `core/`.
-- If you didn't run the in-class example yourself, do it now. Clone the examples repo, `cd ek-ita-swa-examples/08-layered-architecture/example-kotlin` (or `example-python`), and `docker compose up --build`. Then `grep -rh "^import com.example.notes" src/main/kotlin` (Kotlin) or `grep -rh "^from \.\." notes` (Python) — see the dependency rule with your own eyes.
+- If you didn't run the in-class example yourself, do it now. `cd 08._layered_architecture/example-kotlin` (or `example-python`), and `docker compose up --build`. Then `grep -rh "^import com.example.notes" src/main/kotlin` (Kotlin) or `grep -rh "^from \.\." notes` (Python) — see the dependency rule with your own eyes.
 
 ## Optional
 
