@@ -2,7 +2,7 @@
 
 **ITA Software Architecture 2026 Fall | 3 hours**
 
-> The oldest architectural style still in everyday use. Layers are easy to draw, easier to misuse. Today we ask: what makes a stack actually layered? Is Vibe layered? And how do you spot a layered architecture that has quietly become spaghetti?
+> The oldest architectural style still in everyday use. Layers are easy to draw, easier to misuse. Today we ask: what makes a stack actually layered? Is Vibe layered? And how do you spot a layered architecture that has quietly become spaghetti? After class, you'll change a real system's persistence layer and test how layered it actually is.
 
 ---
 
@@ -169,7 +169,7 @@ Bring it to session 9.
 
 ## Investigation (after class)
 
-Same pattern as before: ask, verify, write up. Pick **two** of the three.
+Same pattern as before: ask, verify, write up. Pick **two** of the four.
 
 ### Prompt 1 — The dependency direction across cli ↔ core
 > "In `mistral-vibe-ek-ita`, list every import statement where `cli/` references `core/`, and every import statement where `core/` references `cli/`. Summarise: which way does the dependency flow?"
@@ -185,6 +185,13 @@ Same pattern as before: ask, verify, write up. Pick **two** of the three.
 > "Here is the top-level structure of [BYO repo]. Based on names and any READMEs, identify the layers and one place a layering violation might exist. Tell me the file path."
 
 **Verify:** open the file. Does the violation actually exist, or did the agent guess? Either way, note what convinced you.
+
+### Prompt 4 — Swap your exam project's database to MySQL
+> "My 2nd-semester exam project uses [current DB engine — not MySQL] for its database. I want to migrate it to MySQL. Before you touch anything, tell me every file and every layer you expect to touch, and why. Then make the change. When you're done, list every file you actually touched, grouped by layer."
+
+Need a MySQL instance to migrate to? Reuse the [containerised MySQL warm-up from Session 6](../06._intro_to_software_architecture/README.md#part-0--warm-up-mysql-but-containerised-15-min). If you use that exact setup, use the credentials described there (`root` / `my-secret-pw`, `localhost:3306`).
+
+**Verify:** run the app against the new MySQL database — does it actually read and write correctly? Compare Vibe's *before* prediction to its *after* file list — did the change stay inside the persistence layer, or did it ripple into application, domain, or presentation? If it touched something above persistence, that's not automatically wrong (the layered rule does permit application/domain depending on persistence) — but it should be *explainable*, not a surprise. Note which QA this is putting to the test (maintainability) and whether your project actually delivered on the "swap the database, nothing else changes" claim from Part 3.
 
 ### Deliverable
 
