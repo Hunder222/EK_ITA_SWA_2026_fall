@@ -17,16 +17,12 @@
 
 ## Before Class
 
-- Bring your S7 investigation deliverable — we open by comparing.
 - Pick an open-source project on GitHub you can read, written in a language you know. Have it cloned (or at least bookmarked) and skim its top-level folders before class. Examples: Spring PetClinic, a Django app, an Express API, a Ktor backend, a Nest service — anything with visible structure.
 - [optional] One sentence: a codebase where you've felt "the layers exist but everything touches everything anyway".
 
 ---
 
 ## Today's Teachings
-
-### Part 0 — Compare notes from S7 (10 min)
-Pairs swap S7 investigation deliverables. Each pair surfaces one QA Vibe optimises for *with evidence* and one trade-off they spotted. Two pairs share. Quick — this is now routine.
 
 ### Part 1 — What "layered" means (25 min)
 
@@ -118,7 +114,7 @@ Now zoom into `core/`. Look at its contents:
 
 Is *this* layered? Probably not the way the canonical four-layer stack is. It's organised by capability, not by horizontal slice. The `llm/backend/` folder, in particular, looks like something else entirely. (We'll name that something else next week.)
 
-So what's the verdict? The grep is more interesting than "yes" or "no". `cli/` leans on `core/`, as a presentation-over-application stack should — but you'll also find a few imports running *upward*, from `core/` back into `cli/`. That's an **upward dependency**, exactly what the arrows-down rule forbids (Part 4 calls this kind of leak by name). So: **Vibe's outer shape *looks* layered but leaks at the edges, and its `core/` is something else entirely on the inside.** Hold both halves of that thought — they're the bridge to next week.
+So what's the verdict? The grep is more interesting than "yes" or "no". `cli/` leans on `core/`, as a presentation-over-application stack should — but you'll also find a few imports running *upward*, from `core/` back into `cli/`. That's an **upward dependency**, exactly what the arrows-down rule forbids (named in Part 3). So: **Vibe's outer shape *looks* layered but leaks at the edges, and its `core/` is something else entirely on the inside.** Hold both halves of that thought — they're the bridge to next week.
 
 ### Part 3 — Why it works when it works (25 min)
 Layered's pay-offs, in QA terms:
