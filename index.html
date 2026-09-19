@@ -19,14 +19,23 @@
     }
 
     .markdown-section pre > code {
-      background-color: transparent !important;
-      color: #abb2bf !important;
-      text-shadow: none !important;
-      display: block;
+      padding-top: 30px !important;
     }
 
     .markdown-section pre:after {
-      color: #5c6370 !important;
+      content: attr(data-lang);
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: auto !important; /* Yanks the tag away from the right side */
+      color: #828997 !important;
+      background-color: #21252b; /* Slightly darker pill background */
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      border-radius: 6px 0 6px 0;
+      z-index: 2;
     }
 
     /* Modern Dark Scrollbar for Code Blocks */
@@ -176,34 +185,41 @@
 
     /* Clean Block Copy Button */
     .clean-block-btn {
+      opacity: 1; /* Always visible */
       position: absolute;
       top: 0;
-      right: 50px; /* Pushes it just to the left of the default Copy button */
+      right: 55px; /* Snaps perfectly against the 55px width of the default button */
       z-index: 2;
-      padding: 8px 10px;
+      padding: 6px 10px;
       border: none;
-      background: #282c34;
+      background: #21252b;
       color: #828997;
       font-size: 12px;
       cursor: pointer;
       border-radius: 0 0 0 6px;
-      border-right: 1px solid #3e4451; /* Creates a clean divider between the two buttons */
+      border-right: 1px solid #282c34; /* Creates a clean divider between the two buttons */
       transition: background-color 0.2s ease, color 0.2s ease;
     }
 
     .clean-block-btn:hover {
-      background: #3e4451;
+      background: #42b983;
       color: #ffffff;
     }
     
     /* Make the default docsify copy button match the styling */
     .docsify-copy-code-button {
-      background: #282c34 !important;
+      opacity: 1 !important; /* Overrides Docsify's hover-only default */
+      min-width: 55px; /* Establishes a fixed boundary for the button */
+      text-align: center;
+      background: #21252b !important;
       color: #828997 !important;
       border-radius: 0 6px 0 0 !important;
+      padding: 6px 10px !important;
+      font-size: 12px !important;
+      transition: background-color 0.2s ease, color 0.2s ease;
     }
     .docsify-copy-code-button:hover {
-      background: #3e4451 !important;
+      background: #42b983 !important;
       color: #ffffff !important;
     }
   </style>
