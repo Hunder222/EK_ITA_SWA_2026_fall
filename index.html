@@ -138,6 +138,41 @@
       background: #42b983;
       color: #ffffff;
     }
+
+    /* Dynamic GitHub Materials Box */
+    .extra-materials-box {
+      background-color: #282c34;
+      border-left: 4px solid #42b983;
+      padding: 12px 16px;
+      border-radius: 4px;
+      margin-bottom: 25px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .materials-label {
+      color: #abb2bf;
+      font-weight: bold;
+      margin-right: 5px;
+    }
+
+    .extra-file-link {
+      background-color: #3e4451;
+      color: #abb2bf !important;
+      padding: 4px 10px;
+      border-radius: 4px;
+      text-decoration: none !important;
+      font-size: 13px;
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .extra-file-link:hover {
+      background-color: #42b983;
+      color: #ffffff !important;
+    }
   </style>
 </head>
 <body>
@@ -230,6 +265,56 @@
       });
     }
 
+    function githubMaterialsPlugin(hook, vm) {
+      hook.doneEach(function() {
+        // Find the current folder path (e.g., "08._layered_architecture")
+        let path = vm.route.file;
+        let folder = path.includes('/') ? path.substring(0, path.lastIndexOf('/')) : '';
+        
+        // Skip the main repository root
+        if (!folder) return;
+
+        // Query the GitHub API for this specific folder
+        let repo = 'Hunder222/EK_ITA_SWA_2026_fall';
+        let apiUrl = `https://api.github.com/repos/${repo}/contents/${folder}`;
+
+        fetch(apiUrl)
+          .then(response => response.json())
+          .then(data => {
+            // If the API hits a limit or returns an error, fail silently
+            if (!Array.isArray(data)) return;
+
+            // Filter out the README file so only extra materials remain
+            let extraFiles = data.filter(item => item.name.toLowerCase() !== 'readme.md');
+            
+            if (extraFiles.length > 0) {
+              // Create the UI container
+              let container = document.createElement('div');
+              container.className = 'extra-materials-box';
+              container.innerHTML = '<span class="materials-label">📁 Session Materials:</span>';
+              
+              // Generate a button for each file/folder
+              extraFiles.forEach(file => {
+                let link = document.createElement('a');
+                link.href = file.html_url; // Redirects directly to the GitHub web view
+                link.target = '_blank';
+                link.className = 'extra-file-link';
+                // Add a folder or file emoji based on the type
+                link.innerText = (file.type === 'dir' ? '📂 ' : '📄 ') + file.name;
+                container.appendChild(link);
+              });
+
+              // Inject the box at the very top of the markdown page
+              let markdownSection = document.querySelector('.markdown-section');
+              if (markdownSection) {
+                markdownSection.insertBefore(container, markdownSection.firstChild);
+              }
+            }
+          })
+          .catch(err => console.error('Error fetching materials:', err));
+      });
+    }
+
     window.$docsify = {
       name: 'ITAR Software Arkitektur',
       loadSidebar: true,
@@ -262,7 +347,8 @@
       },
       plugins: [
         customUIPlugin,
-        lineCopyPlugin
+        lineCopyPlugin,
+        githubMaterialsPlugin
       ]
     };
   </script>
