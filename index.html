@@ -12,10 +12,9 @@
     /* Dark code container */
     .markdown-section pre,
     .markdown-section pre[data-lang] {
-      background-color: #282c34 !important;
+      background-color: var(--codeBackgroundColor) !important;
       border-radius: 6px;
       position: relative;
-      /* Removed the left padding that caused the clipping bug */
     }
 
     .markdown-section pre > code {
@@ -29,9 +28,9 @@
       position: absolute;
       top: 0;
       left: 0;
-      right: auto !important; /* Yanks the tag away from the right side */
-      color: #828997 !important;
-      background-color: #21252b; /* Slightly darker pill background */
+      right: auto !important; 
+      color: var(--textColor) !important;
+      background-color: var(--codeBackgroundColor);
       padding: 4px 10px;
       font-size: 11px;
       font-weight: bold;
@@ -152,8 +151,8 @@
 
     /* Dynamic GitHub Materials Box */
     .extra-materials-box {
-      background-color: #282c34;
-      border-left: 4px solid #42b983;
+      background-color: var(--codeBackgroundColor);
+      border-left: 4px solid var(--accent); /* Ties to your green theme accent */
       padding: 12px 16px;
       border-radius: 4px;
       margin-bottom: 25px;
@@ -187,41 +186,104 @@
 
     /* Clean Block Copy Button */
     .clean-block-btn {
-      opacity: 1; /* Always visible */
+      opacity: 1;
       position: absolute;
       top: 0;
-      right: 55px; /* Snaps perfectly against the 55px width of the default button */
+      right: 55px; 
       z-index: 2;
       padding: 6px 10px;
       border: none;
-      background: #21252b;
-      color: #828997;
+      background: var(--codeBackgroundColor);
+      color: var(--textColor);
       font-size: 12px;
       cursor: pointer;
       border-radius: 0 0 0 6px;
-      border-right: 1px solid #282c34; /* Creates a clean divider between the two buttons */
+      border-right: 1px solid var(--borderColor); /* Dynamic divider */
       transition: background-color 0.2s ease, color 0.2s ease;
     }
 
     .clean-block-btn:hover {
-      background: #42b983;
+      background: var(--accent);
       color: #ffffff;
     }
     
     /* Make the default docsify copy button match the styling */
+    /* 1. Dynamic Code Container */
+    .markdown-section pre,
+    .markdown-section pre[data-lang] {
+      background-color: var(--codeBackgroundColor) !important;
+      border-radius: 6px;
+      position: relative;
+    }
+
+    /* 2. Dynamic Language ID Tag */
+    .markdown-section pre:after {
+      content: attr(data-lang);
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: auto !important; 
+      color: var(--textColor) !important;
+      background-color: var(--codeBackgroundColor);
+      padding: 4px 10px;
+      font-size: 11px;
+      font-weight: bold;
+      text-transform: uppercase;
+      border-radius: 6px 0 6px 0;
+      z-index: 2;
+    }
+
+    /* 3. Dynamic GitHub Materials Box */
+    .extra-materials-box {
+      background-color: var(--codeBackgroundColor);
+      border-left: 4px solid var(--accent); /* Ties to your green theme accent */
+      padding: 12px 16px;
+      border-radius: 4px;
+      margin-bottom: 25px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    /* 4. Dynamic Clean Copy Button */
+    .clean-block-btn {
+      opacity: 1;
+      position: absolute;
+      top: 0;
+      right: 55px; 
+      z-index: 2;
+      padding: 6px 10px;
+      border: none;
+      background: var(--codeBackgroundColor);
+      color: var(--textColor);
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 0 0 0 6px;
+      border-right: 1px solid var(--borderColor); /* Dynamic divider */
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .clean-block-btn:hover {
+      background: var(--accent);
+      color: #ffffff;
+    }
+    
+    /* 5. Dynamic Default Copy Button */
     .docsify-copy-code-button {
-      opacity: 1 !important; /* Overrides Docsify's hover-only default */
-      min-width: 55px; /* Establishes a fixed boundary for the button */
+      opacity: 1 !important; 
+      min-width: 55px; 
       text-align: center;
-      background: #21252b !important;
-      color: #828997 !important;
+      background: var(--codeBackgroundColor) !important;
+      color: var(--textColor) !important;
       border-radius: 0 6px 0 0 !important;
       padding: 6px 10px !important;
       font-size: 12px !important;
       transition: background-color 0.2s ease, color 0.2s ease;
     }
     .docsify-copy-code-button:hover {
-      background: #42b983 !important;
+      background: var(--accent) !important;
       color: #ffffff !important;
     }
   </style>
