@@ -173,6 +173,39 @@
       background-color: #42b983;
       color: #ffffff !important;
     }
+
+    /* Clean Block Copy Button */
+    .clean-block-btn {
+      position: absolute;
+      top: 0;
+      right: 50px; /* Pushes it just to the left of the default Copy button */
+      z-index: 2;
+      padding: 8px 10px;
+      border: none;
+      background: #282c34;
+      color: #828997;
+      font-size: 12px;
+      cursor: pointer;
+      border-radius: 0 0 0 6px;
+      border-right: 1px solid #3e4451; /* Creates a clean divider between the two buttons */
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    .clean-block-btn:hover {
+      background: #3e4451;
+      color: #ffffff;
+    }
+    
+    /* Make the default docsify copy button match the styling */
+    .docsify-copy-code-button {
+      background: #282c34 !important;
+      color: #828997 !important;
+      border-radius: 0 6px 0 0 !important;
+    }
+    .docsify-copy-code-button:hover {
+      background: #3e4451 !important;
+      color: #ffffff !important;
+    }
   </style>
 </head>
 <body>
@@ -315,6 +348,50 @@
       });
     }
 
+    function cleanBlockCopyPlugin(hook, vm) {
+      hook.doneEach(function() {
+        // Find all code blocks on the page
+        const codeBlocks = document.querySelectorAll('.markdown-section pre[data-lang]');
+        
+        codeBlocks.forEach(pre => {
+          // Avoid duplicate buttons when navigating between pages
+          if (pre.querySelector('.clean-block-btn')) return;
+
+          const cleanBtn = document.createElement('button');
+          cleanBtn.className = 'clean-block-btn';
+          cleanBtn.innerText = 'Copy Clean';
+          
+          cleanBtn.addEventListener('click', function() {
+            const codeEl = pre.querySelector('code');
+            if (!codeEl) return;
+            
+            // Clone the code block so we don't accidentally delete the visible comments on the page
+            const clone = codeEl.cloneNode(true);
+            
+            // Target and remove all PrismJS comment tokens
+            clone.querySelectorAll('.token.comment').forEach(el => el.remove());
+            
+            // Clean up trailing spaces left behind by the removed comments
+            const lines = clone.innerText.split('\n');
+            const cleanText = lines.map(line => line.trimEnd()).join('\n').trim();
+            
+            navigator.clipboard.writeText(cleanText).then(() => {
+              const originalText = cleanBtn.innerText;
+              cleanBtn.innerText = 'Copied!';
+              cleanBtn.style.color = '#42b983';
+              setTimeout(() => { 
+                cleanBtn.innerText = originalText; 
+                cleanBtn.style.color = ''; 
+              }, 2000);
+            });
+          });
+
+          // Append to the pre tag (the default copy plugin does the same thing)
+          pre.appendChild(cleanBtn);
+        });
+      });
+    }
+
     window.$docsify = {
       name: 'ITAR Software Arkitektur',
       loadSidebar: true,
@@ -348,7 +425,8 @@
       plugins: [
         customUIPlugin,
         lineCopyPlugin,
-        githubMaterialsPlugin
+        githubMaterialsPlugin,
+        cleanBlockCopyPlugin
       ]
     };
   </script>
