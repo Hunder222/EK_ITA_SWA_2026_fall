@@ -36,7 +36,32 @@ We'll spend most of the session hitting a real API directly from the terminal. S
 
 If GitHub auth is genuinely blocking you, you can do most of the session unauthed (60 requests/hour). Bring it up early so we can pair you with someone.
 
-### Part 2 — Predict, then probe (15 min)
+### The REST constraints, in short
+REST is not a technology. It is a set of **constraints**: rules for how a client and a server talk to each other. Each rule takes away some freedom, and in return the system gets something useful: it can grow, be cached, and change without breaking its clients.
+
+- **Client–server:** the client and the server are separate and only talk through requests and responses. *Why:* each side can change without the other.
+
+![A client sends a request to the server and gets a response back](images/client-server.svg)
+
+- **Stateless:** every request carries everything the server needs; the server remembers nothing between requests. *Why:* any server can answer any request, so it's easy to add more servers.
+
+![Two requests, each carrying the token, answered by two different servers that remember nothing](images/stateless.svg)
+
+- **Cacheable:** every response says whether it may be reused, and for how long. *Why:* fewer requests, faster answers.
+
+![The first response says it may be reused for 60 seconds, so the next time no request is needed](images/cacheable.svg)
+
+- **Uniform interface:** every API is used the same way: resources with URLs, standard methods, status codes, and links to what comes next. *Why:* one client, like `curl`, works with any REST API.
+
+![One client uses the same rules to talk to GitHub, your own API and any other REST API](images/uniform-interface.svg)
+
+- **Layered system:** the client can't tell whether it talks to the real server or to something in between, like a cache. *Why:* caches, load balancers and security can be added without changing the client.
+
+![The client talks to a cache, which talks to a load balancer, which talks to the server; the client only sees api.github.com](images/layered-system.svg)
+
+Today you'll find these in GitHub's API. The part headings below say which constraint each part is about.
+
+### Part 2 — Predict, then probe · Uniform interface: resources (15 min)
 We'll look at a handful of GitHub API URLs *before* hitting them. You predict what each returns. Then we hit them and compare.
 
 For each URL, predict: the **status code**, whether you get **one object or a list**, and **one field** you expect to see.
@@ -53,7 +78,15 @@ Then probe each one. `-i` shows the status line and headers above the body:
 curl -i -H "Authorization: Bearer $GH_TOKEN" https://api.github.com/users/octocat
 ```
 
-### Part 3 — Break things on purpose (30 min)
+**How to build a URL.** The URLs you just probed follow a few simple rules:
+
+- A resource is a **noun**, never a verb: `/users`, not `/getUsers`. The HTTP method is the verb.
+- A **collection is plural**: `/users`, `/users/octocat/repos`.
+- **One item** is the collection plus an id: `/users/octocat`, `/repos/octocat/Hello-World/issues/1`.
+- **Nesting** shows "belongs to": `/users/octocat/repos` means octocat's repositories.
+- A **singular** name is for something there is only one of: GitHub's `/user` means "the logged-in user", you.
+
+### Part 3 — Break things on purpose · Uniform interface: status codes (30 min)
 A scavenger hunt for status codes. You'll try requests that *should* fail and inspect what comes back. Goal: collect as many distinct status codes as you can, and figure out which method/path combinations produce them.
 
 Some are easy. Some are sneaky (try to find a `422`).
@@ -70,7 +103,7 @@ Response headers are the API telling about itself. We'll look at `ETag`, `Cache-
 - `X-RateLimit-Limit`, `X-RateLimit-Remaining`, `X-RateLimit-Reset`: how many requests you get per hour, how many you have left, and when the count starts over.
 - `If-None-Match`: a header *you* send, containing the `ETag` you got last time. If nothing has changed, GitHub answers `304 Not Modified` with no body, and the request doesn't count against your rate limit.
 
-### Part 5 — Follow the links (20 min)
+### Part 5 — Follow the links · Uniform interface: hypermedia (HATEOAS) (20 min)
 **HATEOAS** ("Hypermedia As The Engine Of Application State") is one of the REST ideas: an API response should contain links to what you can do or see next, just as a web page does. In theory, a client only needs to know one starting address and can find everything else by following links.
 
 Look at a single repository response, for example `https://api.github.com/repos/octocat/Hello-World`. Count the `*_url` fields. We'll try to navigate from a user to a specific issue without typing a single URL — only by following links inside responses. Then we'll talk about why almost no real client actually does this.
@@ -85,15 +118,15 @@ Start here and follow the trail:
 Look at step 3: is filling in a template still "following a link"?
 
 ### Part 6 — API archaeology (45 min, in pairs)
-Each pair picks one mystery and writes up a short dossier — what URI shape, what method, what status codes, what surprised you. Examples:
+Each pair picks one mystery and investigates it: what URI shape, what method, what status codes, what surprised you. Examples:
 
 - Star a repo, then unstar it. What methods? What status codes?
-- Create an issue, edit it, close it. Document the full lifecycle.
+- Create an issue, edit it, close it. Follow the full lifecycle.
 - Find every way GitHub returns `422`.
-- Why does `/user` work but `/users` (with no name) doesn't?
+- What's the difference between `/user` and `/users`?
 - Page through a user's repositories. How does the API tell you there's a next page?
 
-### Part 7 — What we just learned (30 min)
+### Part 7 — What we just learned · The REST constraints (30 min)
 Where we saw each constraint today:
 
 - **Client–server:** `curl` and GitHub share nothing but HTTP. Any client (`curl`, a browser, a script) talks to the server the same way.
@@ -101,7 +134,6 @@ Where we saw each constraint today:
 - **Cacheability:** responses say whether and for how long they may be reused (`Cache-Control`, `ETag`), and a `304` saves both data and rate limit (Part 4).
 - **Uniform interface:** the same few rules everywhere: resources with URLs, the same methods, the same status codes, and links to what comes next (Parts 2, 3 and 5).
 - **Layered system:** you can't tell whether you're talking to GitHub's own servers or to something in front of them, like a cache, and you don't need to.
-- **Code on demand (optional):** the server may send code for the client to run, like a web page sending JavaScript. GitHub's API doesn't; it only sends data.
 
 ---
 
@@ -115,11 +147,11 @@ Sketch a REST API for a small domain you care about (a library, a recipe book, a
 
 You learned the REST constraints by poking at a real API. Now sharpen what you noticed by interrogating an LLM about it — and verifying.
 
-**Ground rule:** the LLM is a fast, confident, sometimes-wrong study partner. For every claim it makes that matters, verify it against the real API (a `curl` away) or the GitHub docs. The point isn't to collect answers; it's to learn to *check* them.
+**Ground rule:** the LLM is a fast, confident, sometimes-wrong study partner. For every claim it makes that matters, verify it against the real API (a `curl` away) or the [GitHub docs](https://docs.github.com/en/rest). The point isn't to collect answers; it's to learn to *check* them.
 
 Pick **three** of the four prompts below. For each:
 
-1. Run the prompt in Claude Code (or another LLM tool — Claude works well because it can also run the verification command for you).
+1. Run the prompt in Mistral Vibe (or another LLM tool — Vibe works well because it can also run the verification command for you).
 2. Verify the central claim with a real request or a doc lookup.
 3. Note one place the LLM was correct, one place it was vague, wrong, or hedged.
 
@@ -142,17 +174,6 @@ Pick **three** of the four prompts below. For each:
 > "GitHub's API returns 405 Method Not Allowed when I try `DELETE /repos/{owner}/{name}/issues/{n}`. Why don't they let me delete issues via the API? Is this a REST violation, and if so, why is it the right call here?"
 
 **Verify:** try the delete (it'll fail safely with 405). Read GitHub's issues API docs. Cross-check the LLM's reasoning against what GitHub actually documents about issue lifecycle.
-
-### Deliverable
-
-A half-page note (markdown is fine — drop it in the repo you're using for the semester). Structure:
-
-- **What I investigated** — which three prompts.
-- **One thing the LLM got right** — and how you know.
-- **One thing the LLM got wrong, vague, or hedged on** — and how you checked.
-- **What changed in my understanding** — one or two sentences.
-
-Bring this to session 11. We'll spend the first 10 minutes comparing notes.
 
 ---
 
