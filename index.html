@@ -298,7 +298,12 @@
     .markdown-section hr {
         margin: 4em 0;
     }
-    
+
+    html[style*="color-scheme: dark"] .markdown-section img[src$=".svg"] {
+      filter: invert(0.88) hue-rotate(180deg);
+      border-radius: 6px;
+    }
+
   </style>
 </head>
 <body>
