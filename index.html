@@ -429,48 +429,51 @@
     }
 
     function cleanBlockCopyPlugin(hook, vm) {
-      hook.doneEach(function() {
-        // Find all code blocks on the page
-        const codeBlocks = document.querySelectorAll('.markdown-section pre[data-lang]');
-        
-        codeBlocks.forEach(pre => {
-          // Avoid duplicate buttons when navigating between pages
-          if (pre.querySelector('.clean-block-btn')) return;
+        hook.doneEach(function () {
+          // Find all code blocks on the page
+          const codeBlocks = document.querySelectorAll('.markdown-section pre[data-lang]');
 
-          const cleanBtn = document.createElement('button');
-          cleanBtn.className = 'clean-block-btn';
-          cleanBtn.innerText = 'Copy Clean';
-          
-          cleanBtn.addEventListener('click', function() {
-            const codeEl = pre.querySelector('code');
-            if (!codeEl) return;
-            
-            // Clone the code block so we don't accidentally delete the visible comments on the page
-            const clone = codeEl.cloneNode(true);
-            
-            // Target and remove all PrismJS comment tokens
-            clone.querySelectorAll('.token.comment').forEach(el => el.remove());
-            
-            // Clean up trailing spaces left behind by the removed comments
-            const lines = clone.innerText.split('\n');
-            const cleanText = lines.map(line => line.trimEnd()).join('\n').trim();
-            
-            navigator.clipboard.writeText(cleanText).then(() => {
-              const originalText = cleanBtn.innerText;
-              cleanBtn.innerText = 'Copied!';
-              cleanBtn.style.color = '#42b983';
-              setTimeout(() => { 
-                cleanBtn.innerText = originalText; 
-                cleanBtn.style.color = ''; 
-              }, 2000);
+          codeBlocks.forEach(pre => {
+            // Avoid duplicate buttons when navigating between pages
+            if (pre.querySelector('.clean-block-btn')) return;
+
+            const cleanBtn = document.createElement('button');
+            cleanBtn.className = 'clean-block-btn';
+            cleanBtn.innerText = 'Copy Clean';
+
+            cleanBtn.addEventListener('click', function () {
+              const codeEl = pre.querySelector('code');
+              if (!codeEl) return;
+
+              // Clone the code block so we don't accidentally delete the visible comments on the page
+              const clone = codeEl.cloneNode(true);
+
+              // Target and remove all PrismJS comment tokens
+              clone.querySelectorAll('.token.comment').forEach(el => el.remove());
+
+              // Target and remove the line-level copy buttons (the 📋 emojis)
+              clone.querySelectorAll('.line-copy-btn').forEach(el => el.remove());
+
+              // Clean up trailing spaces left behind by the removed comments
+              const lines = clone.innerText.split('\n');
+              const cleanText = lines.map(line => line.trimEnd()).join('\n').trim();
+
+              navigator.clipboard.writeText(cleanText).then(() => {
+                const originalText = cleanBtn.innerText;
+                cleanBtn.innerText = 'Copied!';
+                cleanBtn.style.color = '#42b983';
+                setTimeout(() => {
+                  cleanBtn.innerText = originalText;
+                  cleanBtn.style.color = '';
+                }, 2000);
+              });
             });
-          });
 
-          // Append to the pre tag (the default copy plugin does the same thing)
-          pre.appendChild(cleanBtn);
+            // Append to the pre tag
+            pre.appendChild(cleanBtn);
+          });
         });
-      });
-    }
+      }
 
     window.$docsify = {
       name: 'ITAR Software Arkitektur',
