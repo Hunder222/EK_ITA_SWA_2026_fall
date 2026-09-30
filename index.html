@@ -310,6 +310,59 @@
   <div id="app"></div>
 
   <script>
+    function resolveRelativeImagesPlugin(hook, vm) {
+        hook.afterEach(function (html, next) {
+          let path = (vm.route && vm.route.file) ? vm.route.file : '';
+          let folder = path.includes('/') ? path.substring(0, path.lastIndexOf('/')) : '';
+          if (!folder) return next(html);
+
+          let updatedHtml = html.replace(/<img\s+([^>]*?)src\s*=\s*(["'])(.*?)\2([^>]*?)>/gi, function (match, before, quote, src, after) {
+            if (match.includes('data-origin=')) return match;
+            let cleanSrc = src.trim();
+            if (
+              cleanSrc.startsWith('http://') ||
+              cleanSrc.startsWith('https://') ||
+              cleanSrc.startsWith('//') ||
+              cleanSrc.startsWith('data:') ||
+              cleanSrc.startsWith('/') ||
+              cleanSrc.startsWith('#')
+            ) {
+              return match;
+            }
+            cleanSrc = cleanSrc.replace(/^\.\//, '');
+            if (cleanSrc.startsWith(folder + '/')) {
+              return match;
+            }
+            return '<img ' + before + 'src=' + quote + folder + '/' + cleanSrc + quote + after + '>';
+          });
+
+          next(updatedHtml);
+        });
+
+        hook.doneEach(function () {
+          let path = (vm.route && vm.route.file) ? vm.route.file : '';
+          let folder = path.includes('/') ? path.substring(0, path.lastIndexOf('/')) : '';
+          if (!folder) return;
+
+          document.querySelectorAll('.markdown-section img').forEach(img => {
+            let src = img.getAttribute('src');
+            if (
+              src &&
+              !src.startsWith('http://') &&
+              !src.startsWith('https://') &&
+              !src.startsWith('//') &&
+              !src.startsWith('data:') &&
+              !src.startsWith('/') &&
+              !src.startsWith('#') &&
+              !src.startsWith(folder + '/')
+            ) {
+              let cleanSrc = src.replace(/^\.\//, '');
+              img.setAttribute('src', folder + '/' + cleanSrc);
+            }
+          });
+        });
+      }
+
     function customUIPlugin(hook, vm) {
       let currentMarkdown = '';
       
@@ -524,6 +577,7 @@
         successText: 'Copied'
       },
       plugins: [
+        resolveRelativeImagesPlugin,
         customUIPlugin,
         lineCopyPlugin,
         githubMaterialsPlugin,
