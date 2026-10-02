@@ -4,7 +4,7 @@
 
 > Vi bygger videre på [session 11](../11._rest_api_architecture_2/README.md): samme par, samme notes-service.
 >
-> Sidst skrev I en spørgeliste over alt det, I skulle gætte eller spørge ejerne om for at bruge det andet pars API. Den liste er kontrakten, men indtil nu har den kun fandtes på papir og i hovedet på dem, der skrev koden. I dag bruger I den til at skrive kontrakten ned som en OpenAPI-specifikation.
+> Sidst skrev I en spørgeliste over alt det, I skulle gætte jer til eller spørge ejerne om for at bruge det andet pars API. Den liste er kontrakten, men indtil nu har den kun fandtes på papir og i hovedet på dem, der skrev koden. I dag bruger I den til at skrive kontrakten ned som en OpenAPI-specifikation.
 
 ---
 
@@ -33,7 +33,26 @@ Efter i dag kan du:
 - en **version** i stien, fx `/v1/notes` (skal I så ændre koden? Beslut det selv)
 - en `servers`-linje, der peger på jeres API: `"servers": [{ "url": "http://localhost:3000" }]`
 
-Se den som dokumentation i Swagger UI. Læg `swagger.json` i en mappe `spec/` ved siden af jeres `docker-compose.yml`, og tilføj Swagger UI som en service i filen:
+<hr>
+
+<img src="images/swagger-ui.png" align="right" width="50%" alt="Swagger UI viser Notes API med fem endpoints: GET og POST på /v1/notes samt GET, PUT og DELETE på /v1/notes/{id}, hver med en farvet metode-knap.">
+
+**Se jeres specifikation som dokumentation.** Til det bruger I **Swagger UI**, et værktøj der læser `swagger.json` og viser den som klikbar dokumentation over alle jeres endpoints. I kører det lokalt i Docker, ved siden af jeres API. Læg `swagger.json` i en mappe `spec/` ved siden af `docker-compose.yml`, og tilføj Swagger UI som en service i `docker-compose.yml`:
+
+<br clear="right">
+
+<hr>
+
+```
+notes-service/
+├── backend/
+│   ├── Dockerfile
+│   └── src/
+├── frontend/
+├── spec/
+│   └── swagger.json      ← ny
+└── docker-compose.yml
+```
 
 ```yaml
   swagger-ui:
@@ -47,6 +66,8 @@ Se den som dokumentation i Swagger UI. Læg `swagger.json` i en mappe `spec/` ve
 ```
 
 Kør `docker compose up`, og åbn <http://localhost:8081>. Når I retter i `spec/swagger.json`, skal I bare genindlæse siden.
+
+> Virker Docker ikke, kan I i stedet indsætte indholdet af `swagger.json` i **Swagger Editor** på <https://editor.swagger.io/>. Den viser den samme dokumentation i højre side.
 
 **Byt og tjek.** Giv jeres `swagger.json` til det andet par. Som klient skal I nu teste den mod virkeligheden med **Insomnia**. I kan importere `swagger.json` direkte i Insomnia, så har I alle requests klar:
 
@@ -64,12 +85,10 @@ Demo: GitHubs egen OpenAPI-specifikation af api.github.com, det API I brugte i s
 
 Flere kendte API'er, der offentliggør deres OpenAPI-specifikation:
 
-- **Stripe** (betalinger): [`stripe/openapi`](https://github.com/stripe/openapi/blob/master/openapi/spec3.json)
-- **Twilio** (SMS og telefoni): [`twilio/twilio-oai`](https://github.com/twilio/twilio-oai/blob/main/spec/json/twilio_api_v2010.json)
-- **DigitalOcean** (cloud-hosting): [`digitalocean/openapi`](https://github.com/digitalocean/openapi/blob/main/specification/DigitalOcean-public.v2.yaml)
-- **Kubernetes**: [`api/openapi-spec/swagger.json`](https://github.com/kubernetes/kubernetes/blob/master/api/openapi-spec/swagger.json)
-- **Swagger Petstore**, det klassiske eksempel, som kører live i Swagger UI: <https://petstore3.swagger.io/>
-- **APIs.guru**, et katalog med tusindvis af offentlige specifikationer: <https://apis.guru/>
+- **DMI** (vejrdata): DMI's API til vejrobservationer kører live i Swagger UI, ligesom jeres egen: <https://opendataapi.dmi.dk/v2/metObs/api>
+- **Discord**: [`discord/discord-api-spec`](https://github.com/discord/discord-api-spec/blob/main/specs/openapi.json)
+- **OpenAI** (API'et bag ChatGPT): [`openai/openai-openapi`](https://github.com/openai/openai-openapi/blob/main/openapi.yaml)
+- **Mistral AI** (europæisk AI, bag Le Chat): [`openapi.yaml`](https://docs.mistral.ai/openapi.yaml)
 
 ---
 
