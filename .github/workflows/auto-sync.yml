@@ -9,8 +9,7 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     permissions:
-      contents: write # Allows pushing the merged code
-      issues: write   # Allows the bot to create an issue alert
+      contents: write # Allows pushing the merged code and sidebar updates
 
     steps:
       - name: Checkout repository
@@ -18,38 +17,66 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Sync and Detect New Files
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Sync Upstream and Update Sidebar
         run: |
           # 1. Set up bot identity
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # 2. Fetch the teacher's latest code
-          git remote add upstream https://github.com/Ek-Ita-Swa-Iti/EK_ITA_SWA_2026_fall.git
-          git fetch upstream
-          
-          # 3. Record the current state BEFORE merging
-          BEFORE_MERGE=$(git rev-parse HEAD)
-          
-          # 4. Merge the changes and push to your fork
-          git merge upstream/master --no-edit
-          git push origin master
-          
-          # 5. Record the state AFTER merging
-          AFTER_MERGE=$(git rev-parse HEAD)
-          
-          # 6. Check if any brand new .md files were added (--diff-filter=A means "Added")
-          NEW_MD_FILES=$(git diff --name-only --diff-filter=A $BEFORE_MERGE $AFTER_MERGE | grep '\.md$' || true)
-          
-          if [ -n "$NEW_MD_FILES" ]; then
-            echo "New markdown files detected. Creating GitHub Issue..."
-            
-            # 7. Create an alert ticket using the GitHub CLI
-            gh issue create \
-              --title "🚨 New Session Files Added - Update Sidebar" \
-              --body "The upstream repository just added new Markdown files. Please check if you need to add them to your \`_sidebar.md\` navigation menu!<br><br>**New Files Detected:**<br>\`\`\`text<br>${NEW_MD_FILES}<br>\`\`\`"
+
+          # 2. Safely add or update upstream remote
+          if ! git remote | grep -q "^upstream$"; then
+            git remote add upstream https://github.com/Ek-Ita-Swa-Iti/EK_ITA_SWA_2026_fall.git
           else
-            echo "Sync complete. No new markdown files were added."
+            git remote set-url upstream https://github.com/Ek-Ita-Swa-Iti/EK_ITA_SWA_2026_fall.git
           fi
+          git fetch upstream
+
+          # 3. Record state before merging
+          BEFORE_MERGE=$(git rev-parse HEAD)
+
+          # 4. Merge teacher's changes
+          if ! git merge upstream/master --no-edit; then
+            echo "::error::Merge conflict detected between upstream/master and origin/master! Aborting merge."
+            git merge --abort || true
+            exit 1
+          fi
+
+          # 5. Check if upstream brought new commits or if manually triggered
+          AFTER_MERGE=$(git rev-parse HEAD)
+
+          if [ "$BEFORE_MERGE" != "$AFTER_MERGE" ] || [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Upstream changes detected or workflow manually triggered. Updating sidebar..."
+            python3 .github/scripts/update_sidebar.py
+
+            # 6. Commit _sidebar.md if changed
+            SIDEBAR_CHANGED=false
+            if [ -n "$(git status --porcelain _sidebar.md)" ]; then
+              echo "Sidebar updated by script. Committing changes..."
+              git add _sidebar.md
+              git commit -m "Auto-update _sidebar.md with session changes [skip ci]"
+              SIDEBAR_CHANGED=true
+            fi
+
+            # 7. Push all changes to origin master
+            echo "Pushing commits to origin master..."
+            git push origin master
+
+            # 8. GitHub Step Summary
+            echo "### Upstream Sync Summary" >> $GITHUB_STEP_SUMMARY
+            echo "Successfully synced upstream changes to master." >> $GITHUB_STEP_SUMMARY
+            if [ "$SIDEBAR_CHANGED" = true ]; then
+              echo "- \`_sidebar.md\` was automatically updated and committed." >> $GITHUB_STEP_SUMMARY
+            else
+              echo "- \`_sidebar.md\` checked; already up to date." >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "Already up to date. No new commits pulled from upstream."
+            echo "### Upstream Sync Summary" >> $GITHUB_STEP_SUMMARY
+            echo "Everything is already up to date. No new upstream commits." >> $GITHUB_STEP_SUMMARY
+          fi
+
