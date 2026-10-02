@@ -21,72 +21,35 @@ jobs:
       - name: Sync and Detect New Files
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GH_REPO: ${{ github.repository }}
         run: |
           # 1. Set up bot identity
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
-          # 2. Fetch the teacher's latest code safely
-          if ! git remote | grep -q "^upstream$"; then
-            git remote add upstream https://github.com/Ek-Ita-Swa-Iti/EK_ITA_SWA_2026_fall.git
-          else
-            git remote set-url upstream https://github.com/Ek-Ita-Swa-Iti/EK_ITA_SWA_2026_fall.git
-          fi
+          # 2. Fetch the teacher's latest code
+          git remote add upstream https://github.com/Ek-Ita-Swa-Iti/EK_ITA_SWA_2026_fall.git
           git fetch upstream
           
           # 3. Record the current state BEFORE merging
           BEFORE_MERGE=$(git rev-parse HEAD)
           
-          # 4. Merge changes from upstream master
-          if ! git merge upstream/master --no-edit; then
-            echo "::error::Merge conflict detected between upstream/master and origin/master! Aborting merge."
-            git merge --abort || true
-            exit 1
-          fi
-          
-          # Push to your fork
+          # 4. Merge the changes and push to your fork
+          git merge upstream/master --no-edit
           git push origin master
           
           # 5. Record the state AFTER merging
           AFTER_MERGE=$(git rev-parse HEAD)
           
-          # 6. Check if any brand new session .md files were added (--diff-filter=A means "Added")
-          # Filter explanation:
-          # - grep -i '\.md$': only markdown files
-          # - grep -v '^\.': ignore hidden paths (e.g. .github/)
-          # - grep -v '/.*/': ignore files in subfolders of a session (depth >= 2 slashes, like 09.../example-node/README.md)
-          # - grep -v '^_sidebar\.md$': ignore changes to the sidebar itself
-          NEW_MD_FILES=$(git diff --name-only --diff-filter=A "$BEFORE_MERGE" "$AFTER_MERGE" \
-            | grep -i '\.md$' \
-            | grep -v '^\.' \
-            | grep -v '/.*/' \
-            | grep -v '^_sidebar\.md$' || true)
+          # 6. Check if any brand new .md files were added (--diff-filter=A means "Added")
+          NEW_MD_FILES=$(git diff --name-only --diff-filter=A $BEFORE_MERGE $AFTER_MERGE | grep '\.md$' || true)
           
           if [ -n "$NEW_MD_FILES" ]; then
-            echo "New session markdown files detected:"
-            echo "$NEW_MD_FILES"
-            echo "Creating GitHub Issue on $GH_REPO..."
+            echo "New markdown files detected. Creating GitHub Issue..."
             
-            # 7. Create an alert ticket using the GitHub CLI targeting your repository explicitly
-            if ! gh issue create \
-              --repo "$GH_REPO" \
+            # 7. Create an alert ticket using the GitHub CLI
+            gh issue create \
               --title "🚨 New Session Files Added - Update Sidebar" \
-              --body "$(cat <<EOF
-The upstream repository just added new Markdown files. Please check if you need to add them to your \`_sidebar.md\` navigation menu!
-
-### New Files Detected:
-\`\`\`text
-${NEW_MD_FILES}
-\`\`\`
-EOF
-)"; then
-              echo "::error::Failed to create GitHub Issue. Please check that:"
-              echo "::error::1. 'Issues' feature is enabled in your fork (Repository Settings -> General -> Features -> Issues checkbox)."
-              echo "::error::2. 'Read and write permissions' is selected in Repository Settings -> Actions -> General -> Workflow permissions."
-              exit 1
-            fi
+              --body "The upstream repository just added new Markdown files. Please check if you need to add them to your \`_sidebar.md\` navigation menu!<br><br>**New Files Detected:**<br>\`\`\`text<br>${NEW_MD_FILES}<br>\`\`\`"
           else
-            echo "Sync complete. No new session markdown files were added."
+            echo "Sync complete. No new markdown files were added."
           fi
-
