@@ -634,19 +634,12 @@
 
               // Get language identifier (e.g. 'bash', 'python', 'docker', etc.)
               const lang = pre.getAttribute('data-lang') || '';
-              const langClass = lang ? `language-${lang}` : '';
-
-              function escapeHtml(str) {
-                return str
-                  .replace(/&/g, '&amp;')
-                  .replace(/</g, '&lt;')
-                  .replace(/>/g, '&gt;')
-                  .replace(/"/g, '&quot;')
-                  .replace(/'/g, '&#39;');
-              }
-
-              const codeTag = langClass ? '<code class="' + langClass + '">' : '<code>';
-              const htmlContent = '<pre>' + codeTag + escapeHtml(cleanText) + '</code></pre>';
+              const tempPre = document.createElement('pre');
+              const tempCode = document.createElement('code');
+              if (lang) tempCode.classList.add('language-' + lang);
+              tempCode.textContent = cleanText;
+              tempPre.appendChild(tempCode);
+              const htmlContent = tempPre.outerHTML;
 
               // Write both text/plain (for terminals & code files) and text/html (for Obsidian & rich markdown paste)
               const writePromise = (navigator.clipboard && window.ClipboardItem)
@@ -701,20 +694,14 @@
               }
 
               const fullText = lines.join('\n').trim();
+              // Get language identifier (e.g. 'bash', 'python', 'docker', etc.)
               const lang = pre.getAttribute('data-lang') || '';
-              const langClass = lang ? `language-${lang}` : '';
-
-              function escapeHtml(str) {
-                return str
-                  .replace(/&/g, '&amp;')
-                  .replace(/</g, '&lt;')
-                  .replace(/>/g, '&gt;')
-                  .replace(/"/g, '&quot;')
-                  .replace(/'/g, '&#39;');
-              }
-
-              const codeTag = langClass ? '<code class="' + langClass + '">' : '<code>';
-              const htmlContent = '<pre>' + codeTag + escapeHtml(fullText) + '</code></pre>';
+              const tempPre = document.createElement('pre');
+              const tempCode = document.createElement('code');
+              if (lang) tempCode.classList.add('language-' + lang);
+              tempCode.textContent = fullText;
+              tempPre.appendChild(tempCode);
+              const htmlContent = tempPre.outerHTML;
 
               const writePromise = (navigator.clipboard && window.ClipboardItem)
                 ? navigator.clipboard.write([
