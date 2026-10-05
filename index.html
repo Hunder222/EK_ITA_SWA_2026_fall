@@ -501,8 +501,11 @@
             // If the API hits a limit or returns an error, fail silently
             if (!Array.isArray(data)) return;
 
-            // Filter out the README file so only extra materials remain
-            let extraFiles = data.filter(item => item.name.toLowerCase() !== 'readme.md');
+            // Filter out README and images directory so only extra materials remain
+            let extraFiles = data.filter(item => {
+              let name = item.name.toLowerCase();
+              return name !== 'readme.md' && name !== 'images' && name !== 'img';
+            });
             
             if (extraFiles.length > 0) {
               // Create the UI container
