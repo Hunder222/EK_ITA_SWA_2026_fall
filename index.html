@@ -39,6 +39,13 @@
       text-transform: uppercase;
       border-radius: 6px 0 6px 0;
       z-index: 2;
+      text-shadow: none !important;
+    }
+
+    .markdown-section pre,
+    .markdown-section pre *,
+    .markdown-section pre:after {
+      text-shadow: none !important;
     }
 
     /* Modern Dark Scrollbar for Code Blocks */
@@ -236,9 +243,12 @@
       opacity: 1;
       position: absolute;
       top: 0;
-      right: 55px; 
+      right: 60px; 
       z-index: 2;
+      min-width: 88px;
+      box-sizing: border-box;
       padding: 6px 10px;
+      text-align: center;
       border: none;
       background: var(--codeBackgroundColor);
       color: var(--textColor);
@@ -280,44 +290,79 @@
       z-index: 2;
     }
 
-    /* 4. Dynamic Clean Copy Button */
-    .clean-block-btn {
-      opacity: 1;
-      position: absolute;
-      top: 0;
-      right: 55px; 
-      z-index: 2;
-      padding: 6px 10px;
-      border: none;
-      background: var(--codeBackgroundColor);
-      color: var(--textColor);
-      font-size: 12px;
-      cursor: pointer;
-      border-radius: 0 0 0 6px;
-      border-right: 1px solid var(--borderColor); /* Dynamic divider */
-      transition: background-color 0.2s ease, color 0.2s ease;
-    }
-
-    .clean-block-btn:hover {
-      background: var(--accent);
-      color: #ffffff;
-    }
-    
     /* 5. Dynamic Default Copy Button */
     .docsify-copy-code-button {
       opacity: 1 !important; 
-      min-width: 55px; 
-      text-align: center;
+      width: 60px !important;
+      min-width: 60px !important; 
+      box-sizing: border-box !important;
+      text-align: center !important;
       background: var(--codeBackgroundColor) !important;
       color: var(--textColor) !important;
+      border: none !important;
       border-radius: 0 6px 0 0 !important;
-      padding: 6px 10px !important;
+      padding: 6px 0 !important;
       font-size: 12px !important;
+      position: absolute !important;
+      top: 0 !important;
+      right: 0 !important;
+      z-index: 2 !important;
       transition: background-color 0.2s ease, color 0.2s ease;
     }
     .docsify-copy-code-button:hover {
       background: var(--accent) !important;
       color: #ffffff !important;
+    }
+
+    /* While in copied/success state: fade out hover background so green text is crisp against the code background */
+    .clean-block-btn.copied,
+    .clean-block-btn.copied:hover,
+    .docsify-copy-code-button.success,
+    .docsify-copy-code-button.success:hover {
+      background: var(--codeBackgroundColor) !important;
+      color: #42b983 !important;
+      font-weight: 600 !important;
+    }
+
+    /* By default hide the plugin's floating success/error spans */
+    .docsify-copy-code-button > .success,
+    .docsify-copy-code-button > .error {
+      display: none !important;
+    }
+
+    /* When copied: hide the "Copy" label and render "Copied!" right on the button */
+    .docsify-copy-code-button.success > .label {
+      display: none !important;
+    }
+    .docsify-copy-code-button.success > .success {
+      display: inline !important;
+      position: static !important;
+      opacity: 1 !important;
+      transform: none !important;
+      right: auto !important;
+      top: auto !important;
+      font-size: 12px !important;
+      font-weight: 600 !important;
+      color: #42b983 !important;
+      background: transparent !important;
+      padding: 0 !important;
+    }
+
+    /* On error: render Error label in-place */
+    .docsify-copy-code-button.error > .label {
+      display: none !important;
+    }
+    .docsify-copy-code-button.error > .error {
+      display: inline !important;
+      position: static !important;
+      opacity: 1 !important;
+      transform: none !important;
+      right: auto !important;
+      top: auto !important;
+      font-size: 12px !important;
+      color: #e06c75 !important;
+      background: transparent !important;
+      padding: 0 !important;
     }
 
     .markdown-section h3 {
@@ -555,23 +600,69 @@
               // Clone the code block so we don't accidentally delete the visible comments on the page
               const clone = codeEl.cloneNode(true);
 
-              // Target and remove all PrismJS comment tokens
-              clone.querySelectorAll('.token.comment').forEach(el => el.remove());
-
               // Target and remove the line-level copy buttons (the 📋 emojis)
               clone.querySelectorAll('.line-copy-btn').forEach(el => el.remove());
 
-              // Clean up trailing spaces left behind by the removed comments
-              const lines = clone.innerText.split('\n');
-              const cleanText = lines.map(line => line.trimEnd()).join('\n').trim();
+              // Extract lines from .code-line elements, omitting lines that were solely comments
+              const codeLines = clone.querySelectorAll('.code-line');
+              let cleanedLines = [];
 
-              navigator.clipboard.writeText(cleanText).then(() => {
-                const originalText = cleanBtn.innerText;
+              if (codeLines.length > 0) {
+                codeLines.forEach(lineEl => {
+                  const contentEl = lineEl.querySelector('.line-content') || lineEl;
+                  const originalLineText = contentEl.textContent;
+
+                  // Target and remove all PrismJS comment tokens within this line
+                  contentEl.querySelectorAll('.token.comment').forEach(el => el.remove());
+                  const textAfterRemoval = contentEl.textContent.trimEnd();
+
+                  // If this line originally had content, but after removing comments it's empty,
+                  // it was a full-line comment -> drop this line entirely!
+                  if (originalLineText.trim() !== '' && textAfterRemoval.trim() === '') {
+                    return;
+                  }
+
+                  cleanedLines.push(textAfterRemoval);
+                });
+              } else {
+                clone.querySelectorAll('.token.comment').forEach(el => el.remove());
+                cleanedLines = clone.textContent.split('\n').map(line => line.trimEnd());
+              }
+
+              // Preserve multiline structure, collapsing excessive blank lines down to at most 1 blank line
+              const cleanText = cleanedLines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+
+              // Get language identifier (e.g. 'bash', 'python', 'docker', etc.)
+              const lang = pre.getAttribute('data-lang') || '';
+              const langClass = lang ? `language-${lang}` : '';
+
+              function escapeHtml(str) {
+                return str
+                  .replace(/&/g, '&amp;')
+                  .replace(/</g, '&lt;')
+                  .replace(/>/g, '&gt;')
+                  .replace(/"/g, '&quot;')
+                  .replace(/'/g, '&#39;');
+              }
+
+              const htmlContent = `<pre><code class="${langClass}">${escapeHtml(cleanText)}</code></pre>`;
+
+              // Write both text/plain (for terminals & code files) and text/html (for Obsidian & rich markdown paste)
+              const writePromise = (navigator.clipboard && window.ClipboardItem)
+                ? navigator.clipboard.write([
+                    new ClipboardItem({
+                      'text/plain': new Blob([cleanText], { type: 'text/plain' }),
+                      'text/html': new Blob([htmlContent], { type: 'text/html' })
+                    })
+                  ]).catch(() => navigator.clipboard.writeText(cleanText))
+                : navigator.clipboard.writeText(cleanText);
+
+              writePromise.then(() => {
                 cleanBtn.innerText = 'Copied!';
-                cleanBtn.style.color = '#42b983';
+                cleanBtn.classList.add('copied');
                 setTimeout(() => {
-                  cleanBtn.innerText = originalText;
-                  cleanBtn.style.color = '';
+                  cleanBtn.innerText = 'Copy Clean';
+                  cleanBtn.classList.remove('copied');
                 }, 2000);
               });
             });
@@ -579,6 +670,67 @@
             // Append to the pre tag
             pre.appendChild(cleanBtn);
           });
+
+          // Ensure default "Copy" button also copies with clean multiline text and language tag for Obsidian
+          if (!document._docsifySmartCopyBound) {
+            document._docsifySmartCopyBound = true;
+            document.addEventListener('click', function (e) {
+              const defaultCopyBtn = e.target.closest('.docsify-copy-code-button');
+              if (!defaultCopyBtn) return;
+              const pre = defaultCopyBtn.closest('pre');
+              if (!pre) return;
+              const codeEl = pre.querySelector('code');
+              if (!codeEl) return;
+
+              e.preventDefault();
+              e.stopPropagation();
+
+              const clone = codeEl.cloneNode(true);
+              clone.querySelectorAll('.line-copy-btn').forEach(el => el.remove());
+
+              const codeLines = clone.querySelectorAll('.code-line');
+              let lines;
+              if (codeLines.length > 0) {
+                lines = Array.from(codeLines).map(lineEl => {
+                  const contentEl = lineEl.querySelector('.line-content') || lineEl;
+                  return contentEl.textContent.trimEnd();
+                });
+              } else {
+                lines = clone.textContent.split('\n').map(l => l.trimEnd());
+              }
+
+              const fullText = lines.join('\n').trim();
+              const lang = pre.getAttribute('data-lang') || '';
+              const langClass = lang ? `language-${lang}` : '';
+
+              function escapeHtml(str) {
+                return str
+                  .replace(/&/g, '&amp;')
+                  .replace(/</g, '&lt;')
+                  .replace(/>/g, '&gt;')
+                  .replace(/"/g, '&quot;')
+                  .replace(/'/g, '&#39;');
+              }
+
+              const htmlContent = `<pre><code class="${langClass}">${escapeHtml(fullText)}</code></pre>`;
+
+              const writePromise = (navigator.clipboard && window.ClipboardItem)
+                ? navigator.clipboard.write([
+                    new ClipboardItem({
+                      'text/plain': new Blob([fullText], { type: 'text/plain' }),
+                      'text/html': new Blob([htmlContent], { type: 'text/html' })
+                    })
+                  ]).catch(() => navigator.clipboard.writeText(fullText))
+                : navigator.clipboard.writeText(fullText);
+
+              writePromise.then(() => {
+                defaultCopyBtn.classList.add('success');
+                setTimeout(() => {
+                  defaultCopyBtn.classList.remove('success');
+                }, 2000);
+              });
+            }, true);
+          }
         });
       }
 
@@ -610,7 +762,7 @@
       copyCode: {
         buttonText: 'Copy',
         errorText: 'Error',
-        successText: 'Copied'
+        successText: 'Copied!'
       },
       plugins: [
         resolveRelativeImagesPlugin,
