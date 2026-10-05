@@ -645,7 +645,8 @@
                   .replace(/'/g, '&#39;');
               }
 
-              const htmlContent = `<pre><code class="${langClass}">${escapeHtml(cleanText)}</code></pre>`;
+              const codeTag = langClass ? '<code class="' + langClass + '">' : '<code>';
+              const htmlContent = '<pre>' + codeTag + escapeHtml(cleanText) + '</code></pre>';
 
               // Write both text/plain (for terminals & code files) and text/html (for Obsidian & rich markdown paste)
               const writePromise = (navigator.clipboard && window.ClipboardItem)
@@ -712,7 +713,8 @@
                   .replace(/'/g, '&#39;');
               }
 
-              const htmlContent = `<pre><code class="${langClass}">${escapeHtml(fullText)}</code></pre>`;
+              const codeTag = langClass ? '<code class="' + langClass + '">' : '<code>';
+              const htmlContent = '<pre>' + codeTag + escapeHtml(fullText) + '</code></pre>';
 
               const writePromise = (navigator.clipboard && window.ClipboardItem)
                 ? navigator.clipboard.write([
