@@ -28,22 +28,21 @@ Efter i dag kan du:
 
 ## Del 1: Øvelse · Skriv kontrakten ned (30 min)
 
-**Som API-ejere:** Beskriv jeres eget API i en **OpenAPI-specifikation**, en fil der hedder `swagger.json`. Lad gerne AI'en skrive den. Specifikationen skal have:
+**Som API-ejere:** Beskriv jeres eget API i en **OpenAPI-specifikation**. Dette skal gøres i en fil der hedder `swagger.json`. Lad en AI skrive den, og få en forklaring på hvad denne fil indeholder (spørg ind til det).
+
+Specifikationen skal som minimum have:
 
 - alle endpoints, med metoder og felter
 - mindst **ét fejlsvar** pr. endpoint: hvad sker der, når noget går galt?
-- en **version** i stien, fx `/v1/notes`. Skal koden så også ændres? Det beslutter I selv
+- en **version** i stien, fx `/v1/notes`
 - en `servers`-linje, der peger på jeres API: `"servers": [{ "url": "http://localhost:3000" }]`
 
 <hr>
 
-<img src="images/swagger-ui.png" align="right" width="50%" alt="Swagger UI viser Notes API med fem endpoints: GET og POST på /v1/notes samt GET, PUT og DELETE på /v1/notes/{id}, hver med en farvet metode-knap.">
+**Vis specifikationen i et Swagger UI docker image.** Swagger UI læser `swagger.json` og laver en side, hvor man kan se og afprøve alle jeres endpoints.
 
-**Se jeres specifikation som dokumentation.** Det gør I med **Swagger UI**. Værktøjet læser `swagger.json` og viser alle jeres endpoints som dokumentation, man kan klikke rundt i. Det kører i Docker ved siden af jeres API. Læg `swagger.json` i en ny mappe `spec/`, og tilføj Swagger UI som en service i `docker-compose.yml`:
-
-<br clear="right">
-
-<hr>
+1. Opret mappen `spec/`, og læg `swagger.json` i den.
+2. Tilføj Swagger UI som en service i `docker-compose.yml`:
 
 ```
 notes-service/
@@ -67,11 +66,20 @@ notes-service/
       - ./spec:/spec:ro
 ```
 
-Kør `docker compose up`, og åbn <http://localhost:8081>. Retter I i `spec/swagger.json`, skal I bare genindlæse siden.
+3. Kør `docker compose up`, og åbn <http://localhost:8081>.
 
-> Virker Docker ikke, så indsæt indholdet af `swagger.json` i **Swagger Editor** på <https://editor.swagger.io/>. Den viser den samme dokumentation i højre side.
+**Byt og tjek.** Byt `swagger.json` med det andet par. Nu er I "klienter" og tester det andet pars specifikation mod deres kørende API i **Insomnia**. Få IP-adressen på deres computer, og ændr `servers`-feltet i deres `swagger.json`, så det peger på den ip-adresse.
 
-**Byt og tjek.** Byt `swagger.json` med det andet par. Nu er I klienter og tester deres specifikation mod deres kørende API i **Insomnia**. Importér `swagger.json` direkte i Insomnia, så står alle requests klar:
+### Importér `swagger.json` direkte i Insomnia
+
+1. Opret et nyt projekt i Insomnia med **+ New Project** øverst i venstre side.
+2. Projektet er tomt, så I ser "Welcome to your project!". Klik på **Import**.
+3. Vælg det andet pars `swagger.json`, og importér den.
+4. Specifikationen åbner som en fane med navn og version fra `info`, fx **Notes API 1.0.0**. Her ligger én request pr. endpoint.
+5. Tjek, at requests går til ip-adressen fra `servers`-feltet. Adressen ligger i miljøvariablen `base_url`, så I kan rette den ét sted, hvis den er forkert.
+6. Send en request, og se om svaret passer med specifikationen.
+
+Tjek så:
 
 - Passer felterne?
 - Får I de statuskoder, som specifikationen lover?
