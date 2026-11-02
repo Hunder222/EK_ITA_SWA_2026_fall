@@ -16,6 +16,8 @@
   * [11. REST API Architecture 2](11._rest_api_architecture_2/README.md)
   * [12. OpenAPI](12._openapi/README.md)
   * [14–17. Project: Distributed System](14-17._project_distributed_system/README.md)
+  * [18. Data Architecture](18._data_architecture/README.md)
+  * [19. Data Architecture 2](19._data_architecture_2/README.md)
   * [22–29. Exam Project](22-29._exam_project/README.md)
 * **Skipped sessions**
   * [x11. Hexagonal Architecture](x11._hexagonal_architecture/README.md)
