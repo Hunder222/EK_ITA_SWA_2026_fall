@@ -43,6 +43,40 @@ Hent også Ollama-imaget til Del 5. Det fylder ca. 8 GB, så gør det hjemmefra:
 docker pull ollama/ollama
 ```
 
+Det her er det, vi ender med at bygge på onsdag i [session 19](../19._data_architecture_2/README.md): jeres notes-service med Ollama og Qdrant. Det **rosa** er det nye.
+
+```mermaid
+flowchart LR
+    browser["Browser<br/>frontend :8080"]
+
+    subgraph backend["backend-container :3000"]
+        direction TB
+        server["presentation/<br/>server.js"]
+        service["application/<br/>notesService.js"]
+        mongoRepo["persistence/<br/>notesMongoDBRepository.js"]
+        vectorRepo["persistence/<br/>notesVectorRepository.js"]
+        embed["persistence/<br/>embeddingModel.js"]
+        server --> service
+        service --> mongoRepo
+        service --> embed
+        service --> vectorRepo
+    end
+
+    mongo[("MongoDB :27017<br/>sandhedskilden")]
+    ollama["Ollama :11434<br/>model: bge-m3"]
+    qdrant[("Qdrant :6333<br/>søgeindeks")]
+    swagger["Swagger UI :8081<br/>spec/swagger.json"]
+
+    browser -- "HTTP /v1/notes" --> server
+    browser -- "dokumentation" --> swagger
+    mongoRepo -- "mongodb://mongo:27017" --> mongo
+    embed -- "http://ollama:11434" --> ollama
+    vectorRepo -- "http://qdrant:6333" --> qdrant
+
+    classDef ny fill:#fde2e7,stroke:#d9546e,stroke-width:2px,color:#000
+    class service,embed,vectorRepo,ollama,qdrant ny
+```
+
 ---
 
 ## Del 1: To søgninger, samme side
@@ -51,6 +85,15 @@ Eksemplet er en lille **søgemaskine** over 20 opdigtede hjemmesider. Hver søgn
 
 - **Venstre:** MySQL og den SQL, der bliver kørt
 - **Højre:** Qdrant og de trin, søgningen går igennem
+
+**Start eksemplet først.** Åbn en terminal i roden af kursets repo (`EK_ITA_SWA_2026_fall`), og kør:
+
+```bash
+cd 18._data_architecture/example-search-engine
+docker compose up --build
+```
+
+Åbn <http://localhost:8080>, når den er klar.
 
 > **Miniøvelse (i par):** Søg på de her, og skriv ned, hvad hver side finder:
 
@@ -86,6 +129,29 @@ Vi sætter de her ord ind som punkter: **kaffe, espresso, te, løb, yoga, elregn
 **Det, vi lige har tegnet, er en embedding.** Hvert ord er blevet til to tal, fx kaffe = `[9, 1]`. Ord, der betyder noget lignende, ligger tæt på hinanden. Og at **søge** er bare at spørge: *Hvilke punkter ligger tættest på det her?*
 
 <img src="images/embedding-2d-soegning.svg" width="480" alt="Samme koordinatsystem med cappuccino tilføjet nederst til højre. En stiplet cirkel om cappuccino rammer kaffe, espresso og te: søgning betyder at finde de punkter, der ligger tættest på.">
+
+### En akse mere: z = energi
+
+Kaffe og te ligger næsten oven i hinanden. Det samme gør løb og yoga. Men de er jo ikke det samme. Så vi tilføjer en tredje akse:
+
+- **z:** "giver energi" (0 = slet ikke, 10 = helt sikkert)
+
+| Ord | x (drikker) | y (motion) | z (energi) |
+|-----|:-----------:|:----------:|:----------:|
+| kaffe | 9 | 1 | **8** |
+| espresso | 10 | 0.5 | **10** |
+| te | 8 | 2.5 | **3** |
+| løb | 1 | 9 | **8** |
+| yoga | 1.5 | 8 | **2** |
+| beer pong | 8 | 6 | **5** |
+| elregning | 0.5 | 0.5 | **0** |
+
+<img src="images/embedding-3d.svg" width="560" alt="Et 3D-koordinatsystem med x: noget man drikker, y: noget med motion og z: energi, der går ind i billedet. Hvert punkt har en stiplet linje ned til gulvet, og jo mørkere blå, jo mere energi. Kaffe og espresso ligger langt inde på z-aksen, te ligger tæt på forkanten. Løb ligger langt inde, yoga tæt på forkanten. Elregning ligger ved 0,0,0.">
+
+- Hvad sker der med afstanden mellem kaffe og te? Og mellem løb og yoga?
+- Kaffe og løb er rykket lidt tættere på hinanden. Hvorfor?
+
+Hver ny akse fanger en ny slags lighed. Jo flere akser, jo finere forskelle kan man se.
 
 ### Fra 2 tal til 384 tal
 
