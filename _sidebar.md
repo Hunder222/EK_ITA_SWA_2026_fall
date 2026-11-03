@@ -19,11 +19,3 @@
   * [18. Data Architecture](18._data_architecture/README.md)
   * [19. Data Architecture 2](19._data_architecture_2/README.md)
   * [22–29. Exam Project](22-29._exam_project/README.md)
-* **Skipped sessions**
-  * [x11. Hexagonal Architecture](x11._hexagonal_architecture/README.md)
-  * [x12. Data Architecture](x12._data_architecture/README.md)
-  * [x13. Caching & Performance](x13._caching_and_performance/README.md)
-  * [x18. Event Driven Architecture](x18._event_driven_architecture/README.md)
-  * [x19. Microservices vs Monoliths](x19._microservices_vs_monoliths/README.md)
-  * [x20. Security Architecture](x20._security_architecture/README.md)
-  * [x21. Documentation, ADRs & C4](x21._documentation_adrs_and_c4/README.md)
