@@ -18,4 +18,5 @@
   * [14–17. Project: Distributed System](14-17._project_distributed_system/README.md)
   * [18. Data Architecture](18._data_architecture/README.md)
   * [19. Data Architecture 2](19._data_architecture_2/README.md)
+  * [20. Security Architecture](20._security_architecture/README.md)
   * [22–29. Exam Project](22-29._exam_project/README.md)
