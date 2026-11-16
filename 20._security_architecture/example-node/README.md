@@ -8,18 +8,18 @@ Udgangspunktet for [session 20](../README.md). Det er notes-servicen fra
 - **MongoDB** er sandhedskilden, og **Qdrant** er et søgeindeks, der bygges op igen, når backend starter
 - **Et søgefelt** i frontend og **`spec/swagger.json`** med `/v1/notes/search`, vist i Swagger UI på <http://localhost:8081>
 
-Brug den, hvis jeres egen notes-service ikke virker, eller hvis I vil starte forfra. To ting er med vilje forkerte, og det er dem, I laver om i dag:
+Brug den, hvis jeres egen notes-service ikke virker, eller hvis I vil starte forfra. Én ting er med vilje forkert, og det er den, I laver om i dag:
 
 - **MongoDB-passwordet står direkte i `docker-compose.yml`** (`notes123`), både hos `mongo` og i backends `MONGO_URL`.
-- **API'et er helt åbent:** Alle kan oprette, rette og slette noter.
 
 ## Kør det
 
 ```bash
-docker compose up -d --build
-docker compose exec ollama ollama pull bge-m3     # første gang, ca. 1,2 GB
-docker compose restart backend                    # så indekset bygges med modellen
+docker compose up -d --build     # første gang hentes bge-m3 (ca. 1,2 GB), så backend starter først bagefter
 ```
+
+Servicen `ollama-init` henter modellen `bge-m3` og stopper derefter. Backend venter på den, så søgningen virker,
+så snart backend er oppe. Følg download med `docker compose logs -f ollama-init`.
 
 | Service | Adresse fra jeres computer | Adresse fra en anden container |
 |---------|----------------------------|--------------------------------|
